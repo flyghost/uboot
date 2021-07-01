@@ -33,7 +33,7 @@
 /MLO*
 /SPL
 /System.map
-/u-boot*
+# /u-boot*
 /boards.cfg
 
 #
