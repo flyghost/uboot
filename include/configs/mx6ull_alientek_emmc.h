@@ -11,7 +11,7 @@
 
 #include <asm/arch/imx-regs.h>
 #include <linux/sizes.h>
-#include "mx6_common.h"
+#include "mx6_common.h"				/* 也有一些配置 */
 #include <asm/imx-common/gpio.h>
 
 /* uncomment for PLUGIN mode support */
@@ -28,6 +28,7 @@
 
 #define is_mx6ull_9x9_evk()	CONFIG_IS_ENABLED(TARGET_MX6ULL_9X9_EVK)
 
+/* 设置SDRAM大小 */
 #ifdef CONFIG_TARGET_MX6ULL_9X9_EVK
 #define PHYS_SDRAM_SIZE		SZ_256M
 #define CONFIG_BOOTARGS_CMA_SIZE   "cma=96M "
@@ -47,38 +48,38 @@
 
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 
-#define CONFIG_DISPLAY_CPUINFO
-#define CONFIG_DISPLAY_BOARDINFO
+#define CONFIG_DISPLAY_CPUINFO		/* UBOOT启动的时候可以显示CPU信息 */
+#define CONFIG_DISPLAY_BOARDINFO	/* uboot启动的时候输出板子的信息 */
 
-/* Size of malloc() pool */
+/* malloc内存池大小，这里设置为16MB */
 #define CONFIG_SYS_MALLOC_LEN		(16 * SZ_1M)
 
-#define CONFIG_BOARD_EARLY_INIT_F
-#define CONFIG_BOARD_LATE_INIT
+#define CONFIG_BOARD_EARLY_INIT_F		/* 定义后board_init_f函数会调用board_early_init_f函数 */
+#define CONFIG_BOARD_LATE_INIT			/* 定义后board_init_r函数会调用board_late_init函数*/
 
-#define CONFIG_MXC_UART
-#define CONFIG_MXC_UART_BASE		UART1_BASE
+#define CONFIG_MXC_UART					/* 使能串口功能 */
+#define CONFIG_MXC_UART_BASE		UART1_BASE		/* 串口基地址，这里使用串口1，基地址为UART1_BASE */
 
-/* MMC Configs */
-#ifdef CONFIG_FSL_USDHC
-#define CONFIG_SYS_FSL_ESDHC_ADDR	USDHC2_BASE_ADDR
+#ifdef CONFIG_FSL_USDHC									/* EMMC接在USDHC2上 */
+#define CONFIG_SYS_FSL_ESDHC_ADDR	USDHC2_BASE_ADDR	// EMMC所使用接口的基地址，也就是USDHC2基地址
 
-/* NAND pin conflicts with usdhc2 */
-#ifdef CONFIG_SYS_USE_NAND
+// NAND接在USDHC2上
+// 由于NAND和USDHC2的引脚冲突，所以如果使用NAND的话只能使用一个USDHC设备（SD卡）
+#ifdef CONFIG_SYS_USE_NAND								// 如果使用NAND，则只有一个USDHC
 #define CONFIG_SYS_FSL_USDHC_NUM	1
 #else
-#define CONFIG_SYS_FSL_USDHC_NUM	2
+#define CONFIG_SYS_FSL_USDHC_NUM	2					// 否则的话，有两个USDHC
 #endif
 #endif
 
-/* I2C configs */
+// I2C配置
 #define CONFIG_CMD_I2C
 #ifdef CONFIG_CMD_I2C
 #define CONFIG_SYS_I2C
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
 #define CONFIG_SYS_I2C_MXC_I2C2		/* enable I2C bus 2 */
-#define CONFIG_SYS_I2C_SPEED		100000
+#define CONFIG_SYS_I2C_SPEED		100000			// I2C速度，32
 
 /* PMIC only for 9X9 EVK */
 #define CONFIG_POWER
@@ -89,12 +90,14 @@
 
 #define CONFIG_SYS_MMC_IMG_LOAD_PART	1
 
+// NAND分区设置
 #ifdef CONFIG_SYS_BOOT_NAND
 #define CONFIG_MFG_NAND_PARTITION "mtdparts=gpmi-nand:64m(boot),16m(kernel),16m(dtb),1m(misc),-(rootfs) "
 #else
 #define CONFIG_MFG_NAND_PARTITION ""
 #endif
 
+// 定义MFGTOOLS烧写系统时用到的环境变量
 #define CONFIG_MFG_ENV_SETTINGS \
 	"mfgtool_args=setenv bootargs console=${console},${baudrate} " \
 	    CONFIG_BOOTARGS_CMA_SIZE \
@@ -196,6 +199,7 @@
 				"setenv fdt_file imx6ull-alientek-emmc.dtb; " \
 			"fi;\0" \
 
+// 设置环境变量 bootcmd 的值
 #define CONFIG_BOOTCOMMAND \
 	   "run findfdt;" \
 	   "mmc dev ${mmcdev};" \
@@ -212,25 +216,29 @@
 #endif
 
 /* Miscellaneous configurable options */
+// 设置命令memtest相关的宏定义
 #define CONFIG_CMD_MEMTEST
 #define CONFIG_SYS_MEMTEST_START	0x80000000
 #define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_MEMTEST_START + 0x8000000)
 
-#define CONFIG_SYS_LOAD_ADDR		CONFIG_LOADADDR
-#define CONFIG_SYS_HZ			1000
+#define CONFIG_SYS_LOAD_ADDR		CONFIG_LOADADDR	// Linux kernel在dram中的加载地址，0x80800000
+#define CONFIG_SYS_HZ			1000				// 系统时钟频率，1000hz
 
-#define CONFIG_STACKSIZE		SZ_128K
+#define CONFIG_STACKSIZE		SZ_128K				// 栈大小 128k
 
 /* Physical Memory Map */
-#define CONFIG_NR_DRAM_BANKS		1
-#define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR
+#define CONFIG_NR_DRAM_BANKS		1				// dram banks的数量
+#define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR		// dram控制MMDC0所管辖的dram范围起始地址，0x80000000
 
-#define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM
-#define CONFIG_SYS_INIT_RAM_ADDR	IRAM_BASE_ADDR
-#define CONFIG_SYS_INIT_RAM_SIZE	IRAM_SIZE
+#define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM		// dram的起始地址，0x80000000
+#define CONFIG_SYS_INIT_RAM_ADDR	IRAM_BASE_ADDR	// 内部iram的起始地址，0x00900000
+#define CONFIG_SYS_INIT_RAM_SIZE	IRAM_SIZE		// 内部iram大小，0x00040000=128k
 
+// 初试sp偏移
 #define CONFIG_SYS_INIT_SP_OFFSET \
 	(CONFIG_SYS_INIT_RAM_SIZE - GENERATED_GBL_DATA_SIZE)
+
+// 初试sp地址
 #define CONFIG_SYS_INIT_SP_ADDR \
 	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
@@ -248,10 +256,12 @@
 #define CONFIG_ENV_IS_IN_MMC
 #endif
 
-#define CONFIG_SYS_MMC_ENV_DEV		1   /* USDHC2 */
-#define CONFIG_SYS_MMC_ENV_PART		0	/* user area */
-#define CONFIG_MMCROOT			"/dev/mmcblk1p2"  /* USDHC2 */
-
+#define CONFIG_SYS_MMC_ENV_DEV		1				// 默认的mmc设备，USDHC2，也就是emmc
+#define CONFIG_SYS_MMC_ENV_PART		0				// 模式分区，默认为第0个分区
+#define CONFIG_MMCROOT			"/dev/mmcblk1p2"	// emmc设备的第二个分区      /* USDHC2 */
+													// 第0个分区保存uboot
+													// 第1个分区保存linux镜像和设备树
+													// 第2个分区为Linux系统的根文件系统
 #define CONFIG_CMD_BMODE
 
 #ifdef CONFIG_FSL_QSPI
@@ -269,6 +279,7 @@
 #endif
 
 /* NAND stuff */
+// 与nand有关的定义
 #ifdef CONFIG_SYS_USE_NAND
 #define CONFIG_CMD_NAND
 #define CONFIG_CMD_NAND_TRIMFFS
@@ -285,17 +296,17 @@
 #define CONFIG_APBH_DMA_BURST8
 #endif
 
-#define CONFIG_ENV_SIZE			SZ_8K
-#if defined(CONFIG_ENV_IS_IN_MMC)
-#define CONFIG_ENV_OFFSET		(12 * SZ_64K)
-#elif defined(CONFIG_ENV_IS_IN_SPI_FLASH)
+#define CONFIG_ENV_SIZE			SZ_8K			// 环境变量大小，8K
+#if defined(CONFIG_ENV_IS_IN_MMC)				// 如果环境变量保存在EMMC中
+#define CONFIG_ENV_OFFSET		(12 * SZ_64K)	// 环境变量便宜地址
+#elif defined(CONFIG_ENV_IS_IN_SPI_FLASH)		// 如果环境变量保存在SPIFLASH中
 #define CONFIG_ENV_OFFSET		(768 * 1024)
 #define CONFIG_ENV_SECT_SIZE		(64 * 1024)
 #define CONFIG_ENV_SPI_BUS		CONFIG_SF_DEFAULT_BUS
 #define CONFIG_ENV_SPI_CS		CONFIG_SF_DEFAULT_CS
 #define CONFIG_ENV_SPI_MODE		CONFIG_SF_DEFAULT_MODE
 #define CONFIG_ENV_SPI_MAX_HZ		CONFIG_SF_DEFAULT_SPEED
-#elif defined(CONFIG_ENV_IS_IN_NAND)
+#elif defined(CONFIG_ENV_IS_IN_NAND)			// 如果环境变量定义在nand中
 #undef CONFIG_ENV_SIZE
 #define CONFIG_ENV_OFFSET		(60 << 20)
 #define CONFIG_ENV_SECT_SIZE		(128 << 10)
@@ -304,6 +315,7 @@
 
 
 /* USB Configs */
+// usb相关的定义
 #define CONFIG_CMD_USB
 #ifdef CONFIG_CMD_USB
 #define CONFIG_USB_EHCI
@@ -317,18 +329,19 @@
 #define CONFIG_USB_MAX_CONTROLLER_COUNT 2
 #endif
 
+// 网络相关的定义
 #ifdef CONFIG_CMD_NET
 #define CONFIG_CMD_PING
 #define CONFIG_CMD_DHCP
 #define CONFIG_CMD_MII
 #define CONFIG_FEC_MXC
 #define CONFIG_MII
-#define CONFIG_FEC_ENET_DEV		1
+#define CONFIG_FEC_ENET_DEV		1		// uboot使用的网口，0,用ENET1  1,用ENET2
 
 #if (CONFIG_FEC_ENET_DEV == 0)
-#define IMX_FEC_BASE			ENET_BASE_ADDR
-#define CONFIG_FEC_MXC_PHYADDR          0x0
-#define CONFIG_FEC_XCV_TYPE             RMII
+#define IMX_FEC_BASE			ENET_BASE_ADDR		// ENET接口的寄存器首地址
+#define CONFIG_FEC_MXC_PHYADDR          0x0			// 网口PHY芯片的地址
+#define CONFIG_FEC_XCV_TYPE             RMII		// PHY芯片所使用的接口类型
 #elif (CONFIG_FEC_ENET_DEV == 1)
 #define IMX_FEC_BASE			ENET2_BASE_ADDR
 #define CONFIG_FEC_MXC_PHYADDR		0x1
@@ -343,17 +356,17 @@
 #define CONFIG_IMX_THERMAL
 
 #ifndef CONFIG_SPL_BUILD
-#define CONFIG_VIDEO
+#define CONFIG_VIDEO					// 开启LCD
 #ifdef CONFIG_VIDEO
 #define CONFIG_CFB_CONSOLE
 #define CONFIG_VIDEO_MXS
-#define CONFIG_VIDEO_LOGO
+#define CONFIG_VIDEO_LOGO				// 使能LOGO显示
 #define CONFIG_VIDEO_SW_CURSOR
 #define CONFIG_VGA_AS_SINGLE_DEVICE
 #define CONFIG_SYS_CONSOLE_IS_IN_ENV
 #define CONFIG_SPLASH_SCREEN
 #define CONFIG_SPLASH_SCREEN_ALIGN
-#define CONFIG_CMD_BMP
+#define CONFIG_CMD_BMP					// 使能BMP图片显示指令，这样就可以在uboot中显示图片了，一般用于显示logo
 #define CONFIG_BMP_16BPP
 #define CONFIG_VIDEO_BMP_RLE8
 #define CONFIG_VIDEO_BMP_LOGO
